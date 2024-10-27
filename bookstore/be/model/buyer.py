@@ -56,7 +56,7 @@ class Buyer(db_conn.DBConn):
 
             self.conn["new_order"].insert_one(order)
             order_id = uid
-        except pymongo.error.PyMongoError as e:
+        except pymongo.errors.PyMongoError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
         except BaseException as e:
@@ -153,7 +153,33 @@ class Buyer(db_conn.DBConn):
             if result.modified_count == 0:
                 return error.error_non_exist_user_id(user_id)
 
+        except pymongo.errors.PyMongoError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
 
+        return 200, "ok"
+
+    def receive_order(self, user_id: str, order_id: str) -> (int, str):
+        try:
+            order = self.conn["order_history"].find_one({"order_id": order_id})
+            if not order:
+                return error.error_invalid_order_id(order_id)
+
+            buyer_id = order["user_id"]
+            if buyer_id != user_id:
+                return error.error_authorization_fail()
+
+            status = order["status"]
+            if status != "express":
+                return error.error_not_express(order_id)
+
+            result = self.conn["order_history"].update_one(
+                {"order_id": order_id},
+                {"$set": {"status": "received"}}
+            )
+            if result.modified_count == 0:
+                return error.error_invalid_order_id(order_id)
         except pymongo.errors.PyMongoError as e:
             return 528, "{}".format(str(e))
         except BaseException as e:
