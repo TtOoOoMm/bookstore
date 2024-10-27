@@ -12,7 +12,7 @@ class TestExpressOrder:
     seller_id: str
     buyer_id: str
     store_id: str
-    order_id: str
+    order_id: list
     password: str
     total_price: int
     buyer: Buyer
@@ -24,7 +24,7 @@ class TestExpressOrder:
         self.seller_id = "test_payment_seller_id_{}".format(str(uuid.uuid1()))
         self.store_id = "test_payment_store_id_{}".format(str(uuid.uuid1()))
         self.buyer_id = "test_payment_buyer_id_{}".format(str(uuid.uuid1()))
-        self.password = 123456
+        self.password = '123456'
 
         b = register_new_buyer(self.buyer_id, self.password)
         self.buyer = b
