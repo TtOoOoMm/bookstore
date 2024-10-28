@@ -35,7 +35,7 @@ class TestExpressOrder:
 
         for i in range(2):
             ok, buy_book_id_list = gen_book.gen(
-                non_exist_book_id=False, low_stock_level=False, max_book_count=2
+                non_exist_book_id=False, low_stock_level=False, max_book_count=5
             )
             self.buy_book_info_list.extend(gen_book.buy_book_info_list)
             assert ok
