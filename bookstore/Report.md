@@ -528,7 +528,7 @@ try:
 当buyer创建新订单后，订单状态会变为pending，之后将订单储存到order_history中。当buyer调用payment函数并成功支付以后将
 订单的状态变为paid。
 
-卖家在收到钱之后再调用express_order函数将订单状态改变为express表示快递已经发出，当买家收到货之后将订单的状态改变为
+卖家在收到钱之后再调用express_order函数将订单状态改变为express表示快递已经发出，当买家收到货之后调用receive_order将订单的状态改变为
 received表明已经收到货物，这样整个发货和收货的流程就完成了。
 
 在测试方面，在`fe/test`中添加了`test_express_order.py`的测试文件，初始化了两组订单数据，一组没有付钱，另一组付了钱。
