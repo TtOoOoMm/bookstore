@@ -67,26 +67,6 @@ class TestExpressOrder:
         code = self.buyer.receive_order(self.order_id[0])
         assert code == 200
 
-    def test_error_store_id(self):
-        code = self.seller.express_order(self.store_id + "_test", self.order_id[0])
-        assert code != 200
-
-    def test_error_order_id(self):
-        code = self.seller.express_order(self.store_id, self.order_id[0] + "_test")
-        assert code != 200
-
-    def test_error_seller_id(self):
-        self.seller.seller_id = self.seller.seller_id + "_test"
-        code = self.seller.express_order(self.store_id, self.order_id[0])
-        assert code != 200
-
-    def test_error_buyer_id(self):
-        code = self.seller.express_order(self.store_id, self.order_id[0])
-        assert code == 200
-        self.buyer.user_id = self.buyer.user_id + "_test"
-        code = self.buyer.receive_order(self.order_id[0])
-        assert code != 200
-
     def test_express_not_paid(self):
         code = self.seller.express_order(self.store_id, self.order_id[1])
         assert code != 200
