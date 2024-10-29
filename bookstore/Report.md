@@ -185,7 +185,7 @@ def check_password(self, user_id: str, password: str) -> (int, str):
 修改`login()`：
 
 ```python
- try:
+ 	try:
             code, message = self.check_password(user_id, password)
             if code != 200:
                 return code, message, ""
@@ -209,7 +209,7 @@ def check_password(self, user_id: str, password: str) -> (int, str):
 修改`logout()`函数，过程与`login()`相似：
 
 ```python
-try:
+	try:
             code, message = self.check_token(user_id, token)
             if code != 200:
                 return code, message
@@ -231,7 +231,7 @@ try:
 修改`unregister()`函数：
 
 ```python
- try:
+ 	try:
             code, message = self.check_password(user_id, password)
             if code != 200:
                 return code, message
@@ -248,7 +248,7 @@ try:
 修改`change_password()`函数：
 
 ```python
-try:
+	try:
             code, message = self.check_password(user_id, old_password)
             if code != 200:
                 return code, message
@@ -267,7 +267,9 @@ try:
                 return error.error_authorization_fail()
 ```
 
-传入 user_id，旧密码与新密码，先检查旧密码输入是否正确，验证成功后更新对应 user_id 的 password, token, terminal。
+传入参数 user_id，旧密码 old_password 与新密码 new_password。
+
+先检查旧密码输入是否正确，验证成功后更新对应 user_id 的 password, token, terminal。
 
 用户权限接口的测试对应`fe/test`中的`test_login.py`,`test_password.py`与`test_register.py`。
 
@@ -278,7 +280,7 @@ try:
 修改`buyer.py`中的`add_funds()`函数：
 
 ```python
-try:
+	try:
             user = self.conn["user"].find_one({"user_id": user_id})
             if not user:
                 return error.error_authorization_fail()
@@ -294,6 +296,8 @@ try:
                 return error.error_non_exist_user_id(user_id)
 ```
 
+传入参数 user_id, password 与充值金额 add_value。
+
 首先需验证用户密码信息，成功后用`"$inc"`语法来更新用户的 balance 属性来表示充值金额，最后要检查更新操作是否成功匹配了一个用户，如果没有匹配成功，返回错误码和错误信息，表示用户不存在。
 
 ##### 4.2.2 下单
@@ -301,13 +305,15 @@ try:
 修改`new_order()`函数：
 
 ```python
-try:
+	try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id) + (order_id,)
             if not self.store_id_exist(store_id):
                 return error.error_non_exist_store_id(store_id) + (order_id,)
            
 ```
+
+传入参数 user_id ,商店的 store_id 与书本 id 与购买数量 id_and_count。
 
 对于传入的 user_id 与 store_id，先要检查其是否存在；
 
@@ -366,13 +372,15 @@ try:
 修改`payment()`函数：
 
 ```python
- conn = self.conn
+ 		conn = self.conn
         try:
             cursor = conn["new_order"].find_one({"order_id": order_id})
 
             if cursor is None:
                 return error.error_invalid_order_id(order_id)
 ```
+
+传入参数 user_id, password 与订单的 order_id。
 
 订单集合中必须包含该订单；
 
@@ -453,7 +461,7 @@ try:
 修改`seller.py`中的`create_store()`函数：
 
 ```python
- try:
+     try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
             if self.store_id_exist(store_id):
@@ -465,6 +473,8 @@ try:
             self.conn['user_store'].insert_one(user_store_doc)
 ```
 
+传入参数 user_id, store_id。
+
 检查卖家、商店 id 是否存在，若不存在则返回错误信息；使用`insert_one`将新商店的信息插入`user_store_doc`。
 
 ##### 4.3.2 填加书籍信息
@@ -472,7 +482,7 @@ try:
 修改`add_book()`函数：
 
 ```python
- try:
+ 	try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
             if not self.store_id_exist(store_id):
@@ -489,6 +499,8 @@ try:
             self.conn['store'].insert_one(book_doc)
 ```
 
+传入参数 user_id, store_id, book_id, 图书信息 book_json_str 与库存水平 stock_level。
+
 检查卖家、商店、图书各自 id 是否存在，若不存在则返回错误信息；使用`insert_one`添加其书籍信息。
 
 ##### 4.3.3 描述、增加库存
@@ -496,7 +508,7 @@ try:
 修改`add_stock_level()`函数：
 
 ```python
-try:
+	try:
             if not self.user_id_exist(user_id):
                 return error.error_non_exist_user_id(user_id)
             if not self.store_id_exist(store_id):
@@ -509,6 +521,8 @@ try:
                 {"$inc": {"stock_level": add_stock_level}},
             )
 ```
+
+传入参数 user_id, store_id, book_id 与增加库存水平 add_stock_level。
 
 同样地，检查卖家、商店、图书各自 id 是否存在，若不存在则返回错误信息；使用`update_one`更新库存信息。
 
