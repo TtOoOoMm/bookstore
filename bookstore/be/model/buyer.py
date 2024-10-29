@@ -66,6 +66,7 @@ class Buyer(db_conn.DBConn):
             # 存入历史订单
             order["status"] = "pending"
             self.conn["order_history"].insert_one(order)
+            self.conn["order_history_detail"].insert_many(order_details)
 
         except pymongo.errors.PyMongoError as e:
             logging.info("528, {}".format(str(e)))
@@ -204,3 +205,38 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok"
+
+    def search_history_order(self, user_id: str) -> (int, str, [dict]):
+        try:
+            history_orders = self.conn["order_history"].find({"user_id":user_id})
+            if not list(history_orders):
+                return error.error_non_exist_user_id(user_id) + ([],)
+            
+            results = []
+            for order in list(history_orders):
+                order_id = order["order_id"]
+                details = self.conn["order_history_detail"].find({"order_id":order_id})
+                detail_list = []
+                for detail in details:
+                    book_id = detail["book_id"]
+                    count = detail["count"]
+                    price = detail["price"]
+                    order_detail = {
+                        "book_id": book_id,
+                        "count": count,
+                        "price": price
+                    }
+                    detail_list.append(order_detail)
+
+                result = {
+                    "order_id":order_id,
+                    "details":detail_list
+                }
+                results.append(result)
+
+        except pymongo.errors.PyMongoError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok", results
