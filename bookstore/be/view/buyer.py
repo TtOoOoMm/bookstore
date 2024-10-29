@@ -49,3 +49,11 @@ def receive_order():
     b = Buyer()
     code, message = b.receive_order(user_id, order_id)
     return jsonify({"message": message}), code
+
+@bp_buyer.route("/search_history_order",methods=["POST"])
+def search_history_order():
+    user_id = request.json.get("user_id")
+    b = Buyer()
+    code, message,_ = b.search_history_order(user_id)
+    return jsonify({"message": message}), code
+
