@@ -1,4 +1,5 @@
 # import sqlite3 as sqlite
+import threading
 import pymongo
 import uuid
 import json
@@ -56,6 +57,16 @@ class Buyer(db_conn.DBConn):
 
             self.conn["new_order"].insert_one(order)
             order_id = uid
+
+            # 延迟队列
+
+            # timer = threading.Timer(60.0, self.cancel_order, args=[user_id, order_id])
+            # timer.start()
+
+            # 存入历史订单
+            order["status"] = "pending"
+            self.conn["order_history"].insert_one(order)
+
         except pymongo.errors.PyMongoError as e:
             logging.info("528, {}".format(str(e)))
             return 528, "{}".format(str(e)), ""
@@ -127,6 +138,13 @@ class Buyer(db_conn.DBConn):
 
             cursor = conn['new_order_detail'].delete_many({"order_id": order_id})
             if cursor.deleted_count == 0:
+                return error.error_invalid_order_id(order_id)
+
+            cursor = conn["order_history"].update_one(
+                {"order_id": order_id},
+                {"$set": {"status": "paid"}}
+            )
+            if cursor.modified_count == 0:
                 return error.error_invalid_order_id(order_id)
 
         except pymongo.errors.PyMongoError as e:
