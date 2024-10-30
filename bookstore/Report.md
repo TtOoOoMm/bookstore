@@ -124,7 +124,7 @@ book = self.conn["store"].find_one({"store_id": store_id, "book_id": book_id})
 
 在这个项目中调用接口完成请求的过程，就是在前端`fe/access`首先产生一个请求，然后在`be/view`中的接口识别并接收这些请求，发送给`be/model`中的相应函数，从而对数据库执行相应操作并返回结果。以用户权限中的注册功能为例，位于`fe/access/auth.py`中的`register()`函数首先把用户设置的用户ID和密码并入请求体并发起POST请求，接着`be/view/auth.py`中的`register()`函数会根据路径`"/register"`识别并接收前端的注册请求，提取请求体中的用户ID和密码传给`be/model/user.py`中的`register()`函数，最终由`register()`函数来对数据库完成相关操作。
 
-下面会逐一介绍基础接口的实现方法，省略函数末尾的exception处理与正常结果返回：
+下面会逐一介绍基础接口的实现方法，省略函数末尾的 exception 处理与正常结果返回：
 
 ```python
 		except pymongo.errors.PymongoError as e:
@@ -133,6 +133,8 @@ book = self.conn["store"].find_one({"store_id": store_id, "book_id": book_id})
             return 530, "{}".format(str(e))
         return 200, "ok"
 ```
+
+error 信息详见 `be/model`下的`error.py`。
 
 主要介绍`try:`中对数据正常性的检查与对数据库的操作。
 
@@ -535,7 +537,7 @@ def check_password(self, user_id: str, password: str) -> (int, str):
 ![](.\base_test_result.jpg)
 
 ## 5. 其他功能(40%)
-1)发货 -> 收货
+#### 5.1 发货 -> 收货
 
 要实现发货和收货，需要在`buyer`和`seller`中都添加接口。在seller中增加的是发货的接口，而在buyer中加入的是收货的接口。
 
@@ -547,6 +549,18 @@ received表明已经收到货物，这样整个发货和收货的流程就完成
 
 在测试方面，在`fe/test`中添加了`test_express_order.py`的测试文件，初始化了两组订单数据，一组没有付钱，另一组付了钱。
 分别测试了发货，收货，没有付钱，还没有发货就点击收货，重复发货收货等情况的测试。
+
+#### 5.2 搜索图书
+
+
+
+#### 5.3 查询历史订单
+
+
+
+#### 5.4 取消订单
+
+
 
 ## 6. 亮点
 
