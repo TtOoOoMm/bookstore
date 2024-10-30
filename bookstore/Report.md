@@ -547,6 +547,31 @@ def check_password(self, user_id: str, password: str) -> (int, str):
 卖家在收到钱之后再调用express_order函数将订单状态改变为express表示快递已经发出，当买家收到货之后调用receive_order将订单的状态改变为
 received表明已经收到货物，这样整个发货和收货的流程就完成了。
 
+```python
+    def express_order(self, store_id: str, order_id: str) -> int:
+        json = {
+            "user_id": self.seller_id,
+            "store_id": store_id,
+            "order_id": order_id,
+        }
+        url = urljoin(self.url_prefix, "express_order")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+```
+
+```python
+    def receive_order(self, order_id: str) -> int:
+        json = {
+            "user_id": self.user_id,
+            "order_id": order_id,
+        }
+        url = urljoin(self.url_prefix, "receive_order")
+        headers = {"token": self.token}
+        r = requests.post(url, headers=headers, json=json)
+        return r.status_code
+```
+
 在测试方面，在`fe/test`中添加了`test_express_order.py`的测试文件，初始化了两组订单数据，一组没有付钱，另一组付了钱。
 分别测试了发货，收货，没有付钱，还没有发货就点击收货，重复发货收货等情况的测试。
 
@@ -667,9 +692,7 @@ test的测试文件为`test_search_book.py`。这里需要编写的测试内容�
 对应的测试程序为`fe/test`下的`test_cancel_order.py`，调用`time.sleep(interval)`令其睡眠一定时间使订单超时，测试其是否能够自动取消订单。
 
 #### 5.5 额外功能测试结果
-
-
-![alt text](image.png)
+![alt text](extra_test_result.jpg)
 ## 6. 亮点
 
 #### 6.1 索引
