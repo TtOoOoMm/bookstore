@@ -22,7 +22,7 @@ class TestCancelOrder:
         self.seller_id = "test_payment_seller_id_{}".format(str(uuid.uuid1()))
         self.store_id = "test_payment_store_id_{}".format(str(uuid.uuid1()))
         self.buyer_id = "test_payment_buyer_id_{}".format(str(uuid.uuid1()))
-        self.password = '123456'
+        self.password = self.seller_id
 
         b = register_new_buyer(self.buyer_id, self.password)
         self.buyer = b
@@ -56,25 +56,25 @@ class TestCancelOrder:
 
         yield
 
-        def test_ok(self):
-            code = self.buyer.cancel_order(self.order_id[1])
-            assert code == 200
+    def test_ok(self):
+        code = self.buyer.cancel_order(self.order_id[1])
+        assert code == 200
 
-        def test_non_exist_order_id(self):
-            code = self.buyer.cancel_order(self.order_id[1] + "_x")
-            assert code != 200
+    def test_non_exist_order_id(self):
+        code = self.buyer.cancel_order(self.order_id[1] + "_x")
+        assert code != 200
 
-        def test_repeat_cancel(self):
-            code = self.buyer.cancel_order(self.order_id[1])
-            assert code == 200
-            code = self.buyer.cancel_order(self.order_id[1])
-            assert code != 200
+    def test_repeat_cancel(self):
+        code = self.buyer.cancel_order(self.order_id[1])
+        assert code == 200
+        code = self.buyer.cancel_order(self.order_id[1])
+        assert code != 200
 
-        def test_cancel_paid_order(self):
-            code = self.buyer.cancel_order(self.order_id[0])
-            assert code != 200
+    def test_cancel_paid_order(self):
+        code = self.buyer.cancel_order(self.order_id[0])
+        assert code != 200
 
-        def test_auto_cancel(self):
-            time.sleep(35)
-            code = self.buyer.cancel_order(self.order_id[1])
-            assert code != 200
+    def test_auto_cancel(self):
+        time.sleep(35)
+        code = self.buyer.cancel_order(self.order_id[1])
+        assert code != 200
