@@ -172,3 +172,39 @@ class User(db_conn.DBConn):
         except BaseException as e:
             return 530, "{}".format(str(e))
         return 200, "ok"
+    
+    def search_book(self, title='', content='', tag='', store_id='', page=1):
+        try:
+            query = {}
+
+            if title:
+                query['title'] = {"$regex": title}
+            if content:
+                query['content'] = {"$regex": content}
+            if tag:
+                query['tags'] = {"$regex": tag}
+
+            if store_id:
+                store_query = {"store_id": store_id}
+                store_result = list(self.conn["store"].find(store_query))
+                if len(store_result) == 0:
+                    return error.error_non_exist_store_id(store_id)
+                book_ids = [item["book_id"] for item in store_result]
+                query['id'] = {"$in": book_ids}
+                
+            result = self.conn["books"].find(query)
+            cursor = list(self.conn["books"].find(query))
+            
+            per_page = 10
+            skip = (page - 1) * per_page
+            results = result.skip(skip).limit(per_page)
+            
+            if not cursor:
+                return 529, "No book found."
+            else:
+                return 200, "ok"
+
+        except pymongo.errors.PyMongoError as e:
+            return 528, str(e)
+        except BaseException as e:
+            return 530, str(e)

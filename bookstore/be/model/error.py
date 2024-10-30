@@ -18,6 +18,7 @@ error_code = {
     526: "unknown error",
     527: "unknown error",
     528: "unknown error",
+    529: "No book found.",
 }
 
 

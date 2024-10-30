@@ -552,7 +552,36 @@ received表明已经收到货物，这样整个发货和收货的流程就完成
 
 #### 5.2 搜索图书
 
-
+通过search_book函数实现搜索，搜索内容为title, content, tag, store_id, page 分别代表题目，内容，标签，商店ID，页码（这里页码输入为1，默认为第一页）。
+首先对title, content, tag进行直接搜索。
+```python
+            if title:
+                query['title'] = {"$regex": title}
+            if content:
+                query['content'] = {"$regex": content}
+            if tag:
+                query['tags'] = {"$regex": tag}
+```
+如果提供了store_id，则查询对应商店的书籍。从结果中提取book_id，并将其添加到查询条件中，使得只返回特定商店的书籍。
+```python
+            if store_id:
+                store_query = {"store_id": store_id}
+                store_result = list(self.conn["store"].find(store_query))
+                if len(store_result) == 0:
+                    return error.error_non_exist_store_id(store_id)
+                book_ids = [item["book_id"] for item in store_result]
+                query['id'] = {"$in": book_ids}
+```
+将查询结果放到result中，并进行分页，每页最多显示10条查询结果。
+```python
+            result = self.conn["books"].find(query)
+            cursor = list(self.conn["books"].find(query))
+            
+            per_page = 10
+            skip = (page - 1) * per_page
+            results = result.skip(skip).limit(per_page)
+```
+test的测试文件为`test_search_book.py`。这里需要编写的测试内容包含了全局搜索测试、不存在的书籍测试、商店搜索测试、无效商店ID测试和当前店铺中不存在的书籍测试。每个测试内容包括了分别对题目，内容，标签的测试样例。
 
 #### 5.3 查询历史订单
 
@@ -640,7 +669,7 @@ received表明已经收到货物，这样整个发货和收货的流程就完成
 #### 5.5 额外功能测试结果
 
 
-
+![alt text](image.png)
 ## 6. 亮点
 
 #### 6.1 索引
