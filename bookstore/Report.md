@@ -556,9 +556,88 @@ received表明已经收到货物，这样整个发货和收货的流程就完成
 
 #### 5.3 查询历史订单
 
+首先在`be/model`下的`buyer.py`中添加查询历史订单的函数`search_history_order()`，功能为传入 user_id 后可获取详细的订单信息，订单的图书 book_id,图书数量 count,价格 price 以及订单状态 status。
 
+实现过程如下：
+
+```python
+			history_orders = self.conn["order_history"].find({"user_id":user_id})
+            if not list(history_orders):
+                return error.error_non_exist_user_id(user_id) + ([],)
+            
+            results = []
+            for order in list(history_orders):
+                order_id = order["order_id"]
+                details = self.conn["order_history_detail"].find({"order_id":order_id})
+                detail_list = []
+                for detail in details:
+                    book_id = detail["book_id"]
+                    count = detail["count"]
+                    price = detail["price"]
+                    status = order["status"]
+                    order_detail = {
+                        "book_id": book_id,
+                        "count": count,
+                        "price": price,
+                        "status": status
+                    }
+                    detail_list.append(order_detail)
+
+                result = {
+                    "order_id":order_id,
+                    "details":detail_list
+                }
+                results.append(result)
+```
+
+对照传入的 user_id 无误后，在历史订单列表中遍历并得到每一个订单在"order_history_detail"表中的详细信息，存入 results 数组中。最终输出为ok,状态码200以及 results。
+
+此外，在`be/view`下的`buyer.py`与`fe/access`下的`buyer.py`中加入对应接口。
+
+对应的测试程序为`fe/test`下的`test_search_history_order.py`，分别测试了正常查询与 user_id 不存在的情况。
 
 #### 5.4 取消订单
+
+##### 5.4.1 手动取消订单
+
+首先在`be/model`下的`buyer.py`中添加手动取消订单的函数`cancel_order()`,用户需传入 user_id 与需要取消的订单 order_id。
+
+实现过程如下：在检查 order_id 存在以及订单对应的买家 buyer_id 与传入的 user_id 一致后，执行从新建订单表中删除指定订单信息、存入历史订单的操作，并更新订单状态。为防止重复删除，应检查条目修改数量，为0则报错。
+
+```python
+			result = self.conn["new_order"].delete_one({"order_id": order_id})
+            if result.deleted_count == 0:
+                return error.error_invalid_order_id(order_id)
+
+            result = self.conn["new_order_detail"].delete_many({"order_id": order_id})
+            result = self.conn["order_history"].update_one(
+                {"order_id": order_id},
+                {"$set": {"status": "cancelled"}}
+            )
+            if result.modified_count == 0:
+                return error.error_invalid_order_id(order_id)
+```
+
+此外，在`be/view`下的`buyer.py`与`fe/access`下的`buyer.py`中加入对应接口。
+
+对应的测试程序为`fe/test`下的`test_cancel_order.py`，测试了正常删除订单，订单不存在，重复删除订单以及删除已支付订单的情况。
+
+##### 5.4.2 自动取消订单
+
+此功能需要`import time`
+
+在`be/model`下的`buyer.py`中的`new_order()`函数添加一段代码：
+
+```python
+			timer = threading.Timer(30,self.cancel_order,args=[user_id, order_id])
+            timer.start()
+```
+
+在创建新订单，新订单表中更新信息完成后，设定一个定时器，定时器超时后代表订单失效，自动取消，调用`cancel_order()`函数。使用到的函数时`threading.Timer(interval, function, args=[], kwargs={})`,代表超出时间间隔`interval`后执行`function`,参数为`args`[],`kwargs{}`。令时间间隔为30秒。
+
+对应的测试程序为`fe/test`下的`test_cancel_order.py`，调用`time.sleep(interval)`令其睡眠一定时间使订单超时，测试其是否能够自动取消订单。
+
+#### 5.5 额外功能测试结果
 
 
 
