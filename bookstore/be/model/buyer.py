@@ -58,10 +58,8 @@ class Buyer(db_conn.DBConn):
             self.conn["new_order"].insert_one(order)
             order_id = uid
 
-            # 延迟队列
-
-            # timer = threading.Timer(60.0, self.cancel_order, args=[user_id, order_id])
-            # timer.start()
+            timer = threading.Timer(30,self.cancel_order,args=[user_id, order_id])
+            timer.start()
 
             # 存入历史订单
             order["status"] = "pending"
@@ -221,10 +219,12 @@ class Buyer(db_conn.DBConn):
                     book_id = detail["book_id"]
                     count = detail["count"]
                     price = detail["price"]
+                    status = order["status"]
                     order_detail = {
                         "book_id": book_id,
                         "count": count,
-                        "price": price
+                        "price": price,
+                        "status": status
                     }
                     detail_list.append(order_detail)
 
@@ -240,3 +240,32 @@ class Buyer(db_conn.DBConn):
             return 530, "{}".format(str(e))
 
         return 200, "ok", results
+    
+    def cancel_order(self, user_id: str, order_id: str) -> (int, str):
+        try:
+            order = self.conn["new_order"].find_one({"order_id": order_id})
+            if not order:
+                return error.error_invalid_order_id(order_id)
+
+            buyer_id = order["user_id"]
+            if buyer_id != user_id:
+                return error.error_authorization_fail()
+
+            result = self.conn["new_order"].delete_one({"order_id": order_id})
+            if result.deleted_count == 0:
+                return error.error_invalid_order_id(order_id)
+
+            result = self.conn["new_order_detail"].delete_many({"order_id": order_id})
+            result = self.conn["order_history"].update_one(
+                {"order_id": order_id},
+                {"$set": {"status": "cancelled"}}
+            )
+            if result.modified_count == 0:
+                return error.error_invalid_order_id(order_id)
+            
+        except pymongo.errors.PyMongoError as e:
+            return 528, "{}".format(str(e))
+        except BaseException as e:
+            return 530, "{}".format(str(e))
+
+        return 200, "ok"
